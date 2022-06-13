@@ -16,6 +16,15 @@ class Utilities
 		return (empty($value) && $default === NULL) ? die('Environment variable ' . $name . ' not found or has no value') : $value;
 	}
 
+    /**
+     * @param string $name
+     * @param string $value
+     * @return bool
+     */
+    public static function putenv(string $name, string $value): bool {
+        return \putenv(\sprintf('%s=%s', $name, $value));
+    }
+
 	public static function hasValue($array, $key) {
 		return is_array($array) && array_key_exists($key, $array) && !empty($array[$key]);
 	}

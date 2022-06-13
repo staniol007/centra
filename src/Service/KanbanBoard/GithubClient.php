@@ -1,4 +1,8 @@
 <?php
+declare(strict_types=1);
+
+\App\Service\
+
 
 class GithubClient
 {

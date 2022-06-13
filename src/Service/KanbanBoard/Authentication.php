@@ -33,7 +33,7 @@ class Login {
 			$token = $this->_returnsFromGithub($_GET['code']);
 		}
 		else
-		{
+		{ die('aaa');
 			$_SESSION['redirected'] = true;
 			$this->_redirectToGithub();
 		}

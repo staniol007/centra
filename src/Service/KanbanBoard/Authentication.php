@@ -1,8 +1,12 @@
 <?php
-namespace KanbanBoard;
-use KanbanBoard\Utilities;
+declare(strict_types=1);
 
-class Login {
+namespace App\Service\KanbanBoard;
+
+use \App\Library\Utilities;
+
+class Authentication
+{
 
 	private $client_id = NULL;
 	private $client_secret = NULL;
@@ -18,6 +22,10 @@ class Login {
 		unset($_SESSION['gh-token']);
 	}
 
+    /**
+     * @deprecated
+     * @return mixed|string|void|null
+     */
 	public function login()
 	{
 		session_start();
@@ -33,7 +41,7 @@ class Login {
 			$token = $this->_returnsFromGithub($_GET['code']);
 		}
 		else
-		{ die('aaa');
+		{
 			$_SESSION['redirected'] = true;
 			$this->_redirectToGithub();
 		}
@@ -75,4 +83,5 @@ class Login {
 		array_shift($result);
 		return array_shift($result);
 	}
+
 }

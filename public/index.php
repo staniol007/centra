@@ -1,29 +1,32 @@
 <?php
-use KanbanBoard\Authentication;
-use KanbanBoard\GithubActual;
-use KanbanBoard\Utilities;
+require_once \dirname(__DIR__) . '/vendor/autoload.php';
 
-require '../classes/KanbanBoard/Github.php';
-require '../classes/Utilities.php';
-require '../classes/KanbanBoard/Authentication.php';
+// store all environment variables from .env
+(new \Symfony\Component\Dotenv\Dotenv())
+    ->usePutenv(true)
+    ->loadEnv(\dirname(__DIR__)  . '/.env');
 
-Utilities::putenv('GH_CLIENT_ID', 'marcin.stanik@gmail.com');
-Utilities::putenv('GH_CLIENT_SECRET', 'BobM@rley1945');
-Utilities::putenv('GH_ACCOUNT', 'staniol007');
-Utilities::putenv('GH_REPOSITORIES', 'test01');
+// Don't display errors on productions
+if (\getenv('APP_ENV') != \App\Library\Type\Env::PRODUCTION->value) {
+    \ini_set('display_errors', 1);
+    \error_reporting(\E_ALL);
+}
 
-$repositories = explode('|', Utilities::env('GH_REPOSITORIES'));
+// Pseudo Front Controller Design :)
+// get controller name
+$controller = $_GET['_c'] ?? 'Index';
+// get action name
+$action = $_GET['_a'] ?? 'index';
 
-$authentication = new \KanbanBoard\Login();
-die('aaa');
-$token = $authentication->login();
+$controllerClassName = '\App\Controller\\' . \ucfirst(\strtolower($controller));
+$actionMethodName = \strtolower($action);
 
-$github = new GithubClient($token, Utilities::env('GH_ACCOUNT'));
-$board = new \KanbanBoard\Application($github, $repositories, array('waiting-for-feedback'));
+if (\class_exists($controllerClassName) === false) {
+    throw new \Exception(\sprintf("Controller '%s' not found", $controllerClassName));
+}
 
-$data = $board->board();
-$m = new Mustache_Engine(array(
-	'loader' => new Mustache_Loader_FilesystemLoader('../views'),
-));
+if (\method_exists($controllerClassName, $actionMethodName) === false) {
+    throw new \Exception(\sprintf("Missing action: '%s' in controller: '%s'", $actionMethodName, $controllerClassName));
+}
 
-echo $m->render('index', array('milestones' => $data));
+(new $controllerClassName())->$actionMethodName();

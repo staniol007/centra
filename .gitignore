@@ -3,3 +3,4 @@
 ###< PHPStorm ###
 /vendor/
 /.env.local
+/var/cache/

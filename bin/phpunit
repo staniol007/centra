@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+/**
+ * @author Marcin Stanik <marcin.stanik@gmail.com>
+ * @since 06.2022
+ */
+
+if (!\ini_get('date.timezone')) {
+    \ini_set('date.timezone', 'UTC');
+}
+
+\define('PHPUNIT_COMPOSER_INSTALL', \dirname(__DIR__) . '/vendor/autoload.php');
+
+require PHPUNIT_COMPOSER_INSTALL;
+
+PHPUnit\TextUI\Command::main();

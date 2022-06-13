@@ -19,7 +19,7 @@ final class Index extends AbstractController
         $account = \App\Library\Utilities::env('GH_ACCOUNT');
 
         $GithubClient = new \App\Service\KanbanBoard\GithubClient($token, $account);
-        $Application = new \App\Service\KanbanBoard\Application($GithubClient, $repositories, array('waiting-for-feedback'));
+        $Application = new \App\Service\KanbanBoard\Application($GithubClient, $repositories, ['waiting-for-feedback']);
 
         echo $this->render('index', [
             'milestones' => $Application->board()

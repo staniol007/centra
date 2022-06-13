@@ -2,28 +2,33 @@
 
 namespace App\Library;
 
+/**
+ * @author Marcin Stanik <marcin.stanik@gmail.com>
+ * @since 06.2022
+ * @version 1.0.0
+ */
 class Utilities
 {
-	private function __construct() {
-	}
 
-	public static function env($name, $default = NULL) {
-		$value = \getenv($name);
-		if ($default !== NULL) {
-			if(!empty($value))
-				return $value;
-			return $default;
-		}
-		return (empty($value) && $default === NULL) ? die('Environment variable ' . $name . ' not found or has no value') : $value;
-	}
+    use Utilities\System;
 
-	public static function hasValue($array, $key) {
-		return is_array($array) && array_key_exists($key, $array) && !empty($array[$key]);
-	}
+    use Utilities\Array_;
 
-	public static function dump($data) {
-		echo '<pre>';
-		var_dump($data);
-		echo '</pre>';
-	}
+    private function __construct()
+    {
+    }
+
+    /**
+     * Dumps information about a variable
+     *
+     * @param mixed $data
+     * @return void
+     */
+    public static function dump(mixed $data): void
+    {
+        echo '<pre>';
+        \var_dump($data);
+        echo '</pre>';
+    }
+
 }

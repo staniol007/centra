@@ -37,9 +37,9 @@ final class UtilitiesTest extends TestCase
         $this->assertFalse(Utilities::hasValue(['aaa' => 1], 'bbb'));
         $this->assertFalse(Utilities::hasValue([100, 101], 2));
 
-        $this->assertTrue(Utilities::hasValue([0, '0', '', null], 0));
-        $this->assertTrue(Utilities::hasValue([0, '0', '', null], 1));
-        $this->assertTrue(Utilities::hasValue([0, '0', '', null], 2));
+        $this->assertFalse(Utilities::hasValue([0, '0', '', null], 0));
+        $this->assertFalse(Utilities::hasValue([0, '0', '', null], 1));
+        $this->assertFalse(Utilities::hasValue([0, '0', '', null], 2));
 
         $this->assertFalse(Utilities::hasValue([0, '0', '', null], 3));
     }

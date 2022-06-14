@@ -5,83 +5,122 @@ namespace App\Service\KanbanBoard;
 
 use \App\Library\Utilities;
 
+/**
+ * Please do not use this class any more
+ * It is not possible login to Github and get information about user token by credential data
+ *
+ * @author Marcin Stanik <marcin.stanik@gmail.com>
+ * @since 06.2022
+ * @version 1.0.0
+ * @deprecated
+ */
 class Authentication
 {
 
-	private $client_id = NULL;
-	private $client_secret = NULL;
+    /** @var string */
+    private const GITHUB_STATE = 'LKHYgbn776tgubkjhk';
 
-	public function __construct()
-	{
-		$this->client_id = Utilities::env('GH_CLIENT_ID');
-		$this->client_secret = Utilities::env('GH_CLIENT_SECRET');
-	}
+    /** @var string */
+    private const GITHUB_LOGIN_URL =
+        'Location: https://github.com/login/oauth/authorize'
+        . '?client_id=%s'
+        . '&scope=repo'
+        . '&state=%s';
 
-	public function logout()
-	{
-		unset($_SESSION['gh-token']);
-	}
+    /** @var string */
+    private const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
     /**
-     * @deprecated
-     * @return mixed|string|void|null
+     * @param string $clientId
+     * @param string $clientSecret
      */
-	public function login()
-	{
-		session_start();
-		$token = NULL;
-		if(array_key_exists('gh-token', $_SESSION)) {
-			$token = $_SESSION['gh-token'];
-		}
-		else if(Utilities::hasValue($_GET, 'code')
-			&& Utilities::hasValue($_GET, 'state')
-			&& $_SESSION['redirected'])
-		{
-			$_SESSION['redirected'] = false;
-			$token = $this->_returnsFromGithub($_GET['code']);
-		}
-		else
-		{
-			$_SESSION['redirected'] = true;
-			$this->_redirectToGithub();
-		}
-		$this->logout();
-		$_SESSION['gh-token'] = $token;
-		return $token;
-	}
+    public function __construct(
+        private string $clientId,
+        private string $clientSecret
+    )
+    {
+    }
 
-	private function _redirectToGithub()
-	{
-		$url = 'Location: https://github.com/login/oauth/authorize';
-		$url .= '?client_id=' . $this->client_id;
-		$url .= '&scope=repo';
-		$url .= '&state=LKHYgbn776tgubkjhk';
-		header($url);
-		exit();
-	}
+    /**
+     * @return void
+     */
+    public function logout(): void
+    {
+        unset($_SESSION['gh-token']);
+    }
 
-	private function _returnsFromGithub($code)
-	{
-		$url = 'https://github.com/login/oauth/access_token';
-		$data = array(
-			'code' => $code,
-			'state' => 'LKHYgbn776tgubkjhk',
-			'client_id' => $this->client_id,
-			'client_secret' => $this->client_secret);
-		$options = array(
-			'http' => array(
-				'method' => 'POST',
-				'header' => "Content-type: application/x-www-form-urlencoded\r\n",
-				'content' => http_build_query($data),
-			),
-		);
-		$context = stream_context_create($options);
-		$result = file_get_contents($url, false, $context);
-		if ($result === FALSE)
-			die('Error');
-		$result = explode('=', explode('&', $result)[0]);
-		array_shift($result);
-		return array_shift($result);
-	}
+    /**
+     * @return string|null
+     * @throws \Exception
+     */
+    public function login(): ?string
+    {
+        \session_start();
+        $token = null;
+
+        if (Utilities::hasValue($_SESSION, 'gh-token')) {
+            $token = $_SESSION['gh-token'];
+        } else if (Utilities::hasValue($_GET, 'code')
+            && Utilities::hasValue($_GET, 'state')
+            && Utilities::hasValue($_SESSION, 'redirected')
+            && $_SESSION['redirected'] === true
+        ) {
+            $_SESSION['redirected'] = false;
+            $token = $this->_returnsFromGithub($_GET['code']);
+        } else {
+            $_SESSION['redirected'] = true;
+            $this->_redirectToGithub();
+        }
+
+        $this->logout();
+        $_SESSION['gh-token'] = $token;
+
+        return $token;
+    }
+
+    /**
+     * @return void
+     */
+    private function _redirectToGithub(): void
+    {
+        var_dump(\sprintf(self::GITHUB_LOGIN_URL, $this->clientId, self::GITHUB_STATE));
+        die();
+        \header(\sprintf(self::GITHUB_LOGIN_URL, $this->clientId, self::GITHUB_STATE));
+        exit;
+    }
+
+    /**
+     * @param string $code
+     * @return string|null
+     */
+    private function _returnsFromGithub(string $code): ?string
+    {
+        $data = [
+            'code' => $code,
+            'state' => self::GITHUB_STATE,
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret
+        ];
+
+        $options = [
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                'content' => \http_build_query($data),
+            ],
+        ];
+
+        $context = \stream_context_create($options);
+        $result = \file_get_contents(self::GITHUB_TOKEN_URL, false, $context);
+
+        if ($result !== false) {
+            $result = \explode('=', \explode('&', $result)[0]);
+            \array_shift($result);
+
+            return \array_shift($result);
+        }
+
+        return null;
+    }
 
 }

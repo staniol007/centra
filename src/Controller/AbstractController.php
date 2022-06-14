@@ -2,10 +2,15 @@
 
 namespace App\Controller;
 
+/**
+ * @author Marcin Stanik <marcin.stanik@gmail.com>
+ * @since 06.2022
+ * @version 1.0.0
+ */
 abstract class AbstractController
 {
 
-    /** @var \Mustache_Engine = */
+    /** @var \Mustache_Engine */
     private \Mustache_Engine $MustacheEngine;
 
     abstract public function index(): void;
@@ -22,7 +27,8 @@ abstract class AbstractController
      * @param array $data
      * @return string
      */
-    protected function render(string $viewName, array $data): string {
+    protected function render(string $viewName, array $data): string
+    {
         return $this->MustacheEngine
             ->render($viewName, $data);
     }

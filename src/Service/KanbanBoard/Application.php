@@ -1,123 +1,177 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace App\Service\KanbanBoard;
 
-use Github\Client;
-use vierbergenlars\SemVer\version;
-
-use vierbergenlars\SemVer\expression;
-use vierbergenlars\SemVer\SemVerException;
+use App\Library\Utilities;
 use \Michelf\Markdown;
 
-class Application {
+/**
+ * @author Marcin Stanik <marcin.stanik@gmail.com>
+ * @since 06.2022
+ * @version 1.0.1
+ */
+class Application
+{
+    /** @var string */
+    const ISSUE_STAGE_COMPLETED = 'completed';
 
-	public function __construct($github, $repositories, $paused_labels = array())
-	{
-		$this->github = $github;
-		$this->repositories = $repositories;
-		$this->paused_labels = $paused_labels;
-	}
+    /** @var string */
+    const ISSUE_STAGE_ACTIVE = 'active';
 
-	public function board()
-	{
-		$ms = array();
-		foreach ($this->repositories as $repository)
-		{
-			foreach ($this->github->milestones($repository) as $data)
-			{
-				$ms[$data['title']] = $data;
-				$ms[$data['title']]['repository'] = $repository;
-			}
-		}
-		ksort($ms);
-		foreach ($ms as $name => $data)
-		{
-			$issues = $this->issues($data['repository'], $data['number']);
-			$percent = self::_percent($data['closed_issues'], $data['open_issues']);
-			if($percent)
-			{
-				$milestones[] = array(
-					'milestone' => $name,
-					'url' => $data['html_url'],
-					'progress' => $percent,
-					'queued' => $issues['queued'] ?? false,
-					'active' => $issues['active'] ?? false,
-					'completed' => $issues['completed'] ?? false,
-				);
-			}
-		}
-		return $milestones;
-	}
+    /** @var string */
+    const ISSUE_STAGE_QUEUED = 'queued';
 
-	private function issues($repository, $milestone_id)
-	{
-		$i = $this->github->issues($repository, $milestone_id);
-		foreach ($i as $ii)
-		{
-			if (isset($ii['pull_request'])) {
+    /** @var string */
+    const ISSUE_LABEL_WAITING_FOR_FEEDBACK = 'waiting-for-feedback';
+
+    /**
+     * @param \App\Service\KanbanBoard\Github $Github
+     * @param string[] $repositories
+     * @param string[] $pausedLabels
+     */
+    public function __construct(
+        private \App\Service\KanbanBoard\Github $Github,
+        private array                           $repositories,
+        private array                           $pausedLabels = []
+    )
+    {
+    }
+
+    /**
+     * @return array
+     */
+    public function board(): array
+    {
+        $milestones = [];
+
+        /** @var string $repository */
+        foreach ($this->repositories as $repository) {
+            /** @var array $milestone */
+            foreach ($this->Github->milestones($repository) as $milestone) {
+
+                $percent = $this->_percent($milestone['closed_issues'], $milestone['open_issues']);
+                if (empty($percent) === true) {
+                    continue;
+                }
+
+                $issues = $this->issues($repository, $milestone['number']);
+
+                $milestones[$milestone['title']] = [
+                    'milestone' => $milestone['title'],
+                    'url' => $milestone['html_url'],
+                    'progress' => $percent,
+                    self::ISSUE_STAGE_QUEUED => $issues[self::ISSUE_STAGE_QUEUED] ?? [],
+                    self::ISSUE_STAGE_ACTIVE => $issues[self::ISSUE_STAGE_ACTIVE] ?? [],
+                    self::ISSUE_STAGE_COMPLETED => $issues[self::ISSUE_STAGE_COMPLETED] ?? [],
+                ];
+            }
+        }
+
+        \ksort($milestones);
+        return \array_values($milestones);
+    }
+
+    /**
+     * @param string $repository
+     * @param int $milestoneId
+     * @return array
+     */
+    private function issues(string $repository, int $milestoneId): array
+    {
+        $issues = [];
+
+        foreach ($this->Github->issues($repository, $milestoneId) as $issue) {
+            if (isset($issue['pull_request'])) {
                 continue;
             }
 
-			$issues[$ii['state'] === 'closed' ? 'completed' : (($ii['assignee']) ? 'active' : 'queued')][] = array(
-				'id' => $ii['id'], 'number' => $ii['number'],
-				'title'            	=> $ii['title'],
-				'body'             	=> Markdown::defaultTransform($ii['body'] ?? ''),
-                'url' => $ii['html_url'],
-				'assignee'         	=> (is_array($ii) && array_key_exists('assignee', $ii) && !empty($ii['assignee'])) ? $ii['assignee']['avatar_url'].'?s=16' : NULL,
-				'paused'			=> self::labels_match($ii, $this->paused_labels),
-				'progress'			=> self::_percent(
-											\substr_count(\strtolower($ii['body'] ?? ''), '[x]'),
-											\substr_count(\strtolower($ii['body'] ?? ''), '[ ]')),
-				'closed'			=> $ii['closed_at']
-			);
-		}
+            $state = $this->_state($issue);
 
-        if (\App\Library\Utilities::hasValue($issues, 'active') === true) {
-            usort($issues['active'], function ($a, $b) {
-                return count($a['paused']) - count($b['paused']) === 0 ? strcmp($a['title'], $b['title']) : count($a['paused']) - count($b['paused']);
+            $issues[$state][] = [
+                'id' => $issue['id'],
+                'number' => $issue['number'],
+                'title' => $issue['title'],
+                'body' => Markdown::defaultTransform($issue['body'] ?? ''),
+                'url' => $issue['html_url'],
+                'assignee' => Utilities::hasValue($issue, 'assignee') && Utilities::hasValue($issue['assignee'], 'avatar_url')
+                    ? $issue['assignee']['avatar_url'] . '?s=16'
+                    : null,
+                'paused' => $this->_labelsMatch($issue),
+                'progress' => $this->_percent(
+                    \substr_count(\strtolower($issue['body'] ?? ''), '[x]'),
+                    \substr_count(\strtolower($issue['body'] ?? ''), '[ ]')),
+                'closed' => $issue['closed_at'],
+            ];
+        }
+
+        if (Utilities::hasValue($issues, self::ISSUE_STAGE_ACTIVE) === true && \count($issues[self::ISSUE_STAGE_ACTIVE]) > 1) {
+            \usort($issues[self::ISSUE_STAGE_ACTIVE], function (array $a, array $b): int {
+                return \count($a['paused']) - \count($b['paused']) === 0
+                    ? \strcmp($a['title'], $b['title'])
+                    : \count($a['paused']) - \count($b['paused']);
             });
         }
 
-		return $issues;
-	}
+        return $issues;
+    }
 
-	private static function _state($issue)
-	{
-		if ($issue['state'] === 'closed')
-			return 'completed';
-		else if (\App\Library\Utilities::hasValue($issue, 'assignee') && count($issue['assignee']) > 0)
-			return 'active';
-		else
-			return 'queued';
-	}
+    /**
+     * @param array $issue
+     * @return string
+     */
+    private function _state(array $issue): string
+    {
+        return match (true) {
+            ($issue['state'] == 'closed') => self::ISSUE_STAGE_COMPLETED,
+            Utilities::hasValue($issue, 'assignee') => self::ISSUE_STAGE_ACTIVE,
+            default => self::ISSUE_STAGE_QUEUED
+        };
+    }
 
-	private static function labels_match($issue, $needles)
-	{
-		if(\App\Library\Utilities::hasValue($issue, 'labels')) {
-			foreach ($issue['labels'] as $label) {
-				if (in_array($label['name'], $needles)) {
-					return array($label['name']);
-				}
-			}
-		}
-		return array();
+    /**
+     * @param array $issue
+     * @return string[]
+     */
+    private function _labelsMatch(array $issue): array
+    {
+        $result = [];
 
-	}
+        if (Utilities::hasValue($issue, 'labels') && \count($this->pausedLabels) > 0) {
+            /** @var array $label */
+            foreach ($issue['labels'] as $label) {
+                if (Utilities::hasValue($label, 'name') && \in_array($label['name'], $this->pausedLabels)) {
+                    $result = [$label['name']];
+                    break;
+                }
+            }
+        }
 
-	private static function _percent($complete, $remaining)
-	{
-		$total = $complete + $remaining;
-		if($total > 0)
-		{
-			$percent = ($complete OR $remaining) ? round($complete / $total * 100) : 0;
-			return array(
-				'total' => $total,
-				'complete' => $complete,
-				'remaining' => $remaining,
-				'percent' => $percent
-			);
-		}
-		return array();
-	}
+        return $result;
+    }
+
+    /**
+     * @param int $complete
+     * @param int $remaining
+     * @return array
+     */
+    private function _percent(int $complete, int $remaining): array
+    {
+        $total = $complete + $remaining;
+
+        if ($total == 0) {
+            return [];
+        }
+
+        $percent = $complete > 0 || $remaining > 0
+            ? \round($complete / $total * 100)
+            : 0;
+
+        return [
+            'total' => $total,
+            'complete' => $complete,
+            'remaining' => $remaining,
+            'percent' => $percent
+        ];
+    }
+
 }

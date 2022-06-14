@@ -40,8 +40,8 @@ class FrontController
      */
     public function getControllerClassName(): string
     {
-        $controller = ($_GET['_c'] ?? 'Index') . 'Controller';
-        return '\App\Controller\\' . \ucfirst(\strtolower($controller));
+        return '\App\Controller\\'
+            . \ucfirst(\strtolower($_GET['_c'] ?? 'Index')) . 'Controller';;
     }
 
     /**

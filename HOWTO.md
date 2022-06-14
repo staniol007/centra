@@ -36,7 +36,7 @@ composer install
 
 ### Docker
 ```shell
-docker-compose up -d --buid
+docker-compose up -d --build
 ```
 
 ## CONFIGURATION

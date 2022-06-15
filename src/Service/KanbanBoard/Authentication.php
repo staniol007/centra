@@ -1,5 +1,4 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace App\Service\KanbanBoard;
 
@@ -11,7 +10,7 @@ use \App\Library\Utilities;
  *
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.0
+ * @version 1.0.1
  * @deprecated
  */
 class Authentication
@@ -83,8 +82,6 @@ class Authentication
      */
     private function _redirectToGithub(): void
     {
-        var_dump(\sprintf(self::GITHUB_LOGIN_URL, $this->clientId, self::GITHUB_STATE));
-        die();
         \header(\sprintf(self::GITHUB_LOGIN_URL, $this->clientId, self::GITHUB_STATE));
         exit;
     }

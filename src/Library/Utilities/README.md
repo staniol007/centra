@@ -1,6 +1,6 @@
-Here can be created other groups of utilities method
-(other way class Utilities can be very large
-example:
-String
-Int
-...
+Here can be created other groups of utilities method \
+(other way the Utilities class can be very large) \
+example: \
+String \
+Int \
+... 

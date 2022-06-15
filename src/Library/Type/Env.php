@@ -7,6 +7,7 @@ namespace App\Library\Type;
  *
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
+ * @version 1.0.0
  */
 enum Env: string
 {

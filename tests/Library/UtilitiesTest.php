@@ -6,18 +6,19 @@ use PHPUnit\Framework\TestCase;
 use App\Library\Utilities;
 
 /**
- * Unit test for s\App\Library\Utilities
+ * Unit test for \App\Library\Utilities
  *
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
  * @version 1.0.1
+ * @example
+ * php bin/phpunit tests/Library/UtilitiesTest.php
  */
 final class UtilitiesTest extends TestCase
 {
 
     public function testEnv(): void
     {
-
         $this->assertNotNull(Utilities::env('APP_ENV'));
         $this->assertNotNull(Utilities::env('GH_TOKEN'));
         $this->assertNotNull(Utilities::env('GH_ACCOUNT'));
@@ -26,6 +27,11 @@ final class UtilitiesTest extends TestCase
         $this->assertNull(Utilities::env('APP_ENV_AAA'));
 
         $this->assertEquals(Utilities::env('APP_ENV_AAA', 'AAA'), 'AAA');
+
+        $this->assertNotEquals(Utilities::env('APP_ENV'), '...', 'Environment APP_ENV is not set');
+        $this->assertNotEquals(Utilities::env('GH_TOKEN'), '...', 'Environment GH_TOKEN is not set');
+        $this->assertNotEquals(Utilities::env('GH_ACCOUNT'), '...', 'Environment GH_ACCOUNT is not set');
+        $this->assertNotEquals(Utilities::env('GH_REPOSITORIES'), '...', 'Environment GH_REPOSITORIES is not set');
     }
 
     public function testHasValue(): void

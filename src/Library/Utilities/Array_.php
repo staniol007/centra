@@ -2,7 +2,6 @@
 
 namespace App\Library\Utilities;
 
-
 /**
  * @autor Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022

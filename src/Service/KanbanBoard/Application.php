@@ -80,6 +80,7 @@ class Application
     {
         $issues = [];
 
+        /** @var array $issue */
         foreach ($this->Github->issues($repository, $milestoneId) as $issue) {
             if (isset($issue['pull_request'])) {
                 continue;

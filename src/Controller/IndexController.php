@@ -8,7 +8,7 @@ use \App\Service\KanbanBoard\Application;
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.1
+ * @version 1.0.2
  */
 final class IndexController extends AbstractController
 {
@@ -29,7 +29,7 @@ final class IndexController extends AbstractController
 
         $repositories = \array_filter(
             \array_unique(\explode('|', (string)Utilities::env('GH_REPOSITORIES'))),
-            fn(string $repository) => $repository != ""
+            fn(string $repository): bool => $repository != ""
         );
         if (\count($repositories) == 0) {
             throw new \Exception('Missing GitHub repositories!');

@@ -5,7 +5,7 @@ namespace App\Controller;
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.0
+ * @version 1.0.1
  */
 abstract class AbstractController
 {
@@ -13,6 +13,9 @@ abstract class AbstractController
     /** @var \Mustache_Engine */
     private \Mustache_Engine $MustacheEngine;
 
+    /**
+     * @return void
+     */
     abstract public function index(): void;
 
     public function __construct()

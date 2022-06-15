@@ -8,7 +8,7 @@ use \App\Service\KanbanBoard\Application;
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.2
+ * @version 1.0.3
  */
 final class IndexController extends AbstractController
 {
@@ -50,7 +50,7 @@ final class IndexController extends AbstractController
             $repositories, [Application::ISSUE_LABEL_WAITING_FOR_FEEDBACK]
         );
 
-        echo $this->render('index', [
+        echo $this->render('index/index', [
             'milestones' => $Application->board()
         ]);
     }

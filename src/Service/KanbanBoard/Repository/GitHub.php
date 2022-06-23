@@ -5,9 +5,9 @@ namespace App\Service\KanbanBoard\Repository;
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.3
+ * @version 1.0.4
  */
-class Github implements RepositoryInterface
+class GitHub implements RepositoryInterface
 {
     /** @var \Github\Client */
     private \Github\Client $GithubClient;

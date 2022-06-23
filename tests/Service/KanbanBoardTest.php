@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.1
+ * @version 1.0.2
  * @example
  * php bin/phpunit tests/Service/KanbanBoardTest.php
  */
@@ -46,7 +46,7 @@ final class KanbanBoardTest extends TestCase
         $this->KanbanBoardReflection = new \ReflectionClass(KanbanBoard::class);
 
         $this->KanbanBoard = new KanbanBoard(
-            new \App\Service\KanbanBoard\Repository\Github($token, $account),
+            new \App\Service\KanbanBoard\Repository\GitHub($token, $account),
             $repositoryNames,
             [KanbanBoard::ISSUE_LABEL_WAITING_FOR_FEEDBACK]
         );

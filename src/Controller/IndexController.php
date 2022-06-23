@@ -8,7 +8,7 @@ use App\Service\KanbanBoard;
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.3
+ * @version 1.0.4
  */
 final class IndexController extends AbstractController
 {
@@ -19,14 +19,6 @@ final class IndexController extends AbstractController
      */
     public function index(): void
     {
-        // This part of code is not supported any more. I only implemented it to show what it should look like, if it would work
-        /* START deprecated code
-        $clientId = Utilities::env('GH_CLIENT_ID', 'AAA');
-        $clientSecret = Utilities::env('GH_CLIENT_SECRET', 'BBB');
-        $Authentication = new \App\Service\KanbanBoard\Authentication($clientId, $clientSecret);
-        $token = $Authentication->login();
-        END deprecated */
-
         $repositoryNames = \array_filter(
             \array_unique(\explode('|', (string)Utilities::env('GH_REPOSITORIES'))),
             fn(string $repository): bool => $repository != ""
@@ -46,7 +38,7 @@ final class IndexController extends AbstractController
         }
 
         $KanbanBoard = new KanbanBoard(
-            new \App\Service\KanbanBoard\Repository\Github($token, $account),
+            new \App\Service\KanbanBoard\Repository\GitHub($token, $account),
             $repositoryNames,
             [KanbanBoard::ISSUE_LABEL_WAITING_FOR_FEEDBACK]
         );

@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Library\Utilities;
-use \App\Service\KanbanBoard\Application;
+use App\Service\KanbanBoard;
 
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
@@ -27,11 +27,11 @@ final class IndexController extends AbstractController
         $token = $Authentication->login();
         END deprecated */
 
-        $repositories = \array_filter(
+        $repositoryNames = \array_filter(
             \array_unique(\explode('|', (string)Utilities::env('GH_REPOSITORIES'))),
             fn(string $repository): bool => $repository != ""
         );
-        if (\count($repositories) == 0) {
+        if (\count($repositoryNames) == 0) {
             throw new \Exception('Missing GitHub repositories!');
         }
 
@@ -45,13 +45,14 @@ final class IndexController extends AbstractController
             throw new \Exception('Missing GitHub account');
         }
 
-        $Application = new Application(
-            new \App\Service\KanbanBoard\Github($token, $account),
-            $repositories, [Application::ISSUE_LABEL_WAITING_FOR_FEEDBACK]
+        $KanbanBoard = new KanbanBoard(
+            new \App\Service\KanbanBoard\Repository\Github($token, $account),
+            $repositoryNames,
+            [KanbanBoard::ISSUE_LABEL_WAITING_FOR_FEEDBACK]
         );
 
         echo $this->render('index/index', [
-            'milestones' => $Application->board()
+            'milestones' => $KanbanBoard->getMilestones()
         ]);
     }
 

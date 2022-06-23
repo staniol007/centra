@@ -5,14 +5,14 @@ namespace App\Library;
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.0
+ * @version 1.0.1
  */
 class Utilities
 {
 
-    use Utilities\System;
+    use Utilities\SystemTrait;
 
-    use Utilities\Array_;
+    use Utilities\ArrayTrait;
 
     private function __construct()
     {

@@ -21,16 +21,15 @@ if (\method_exists(Dotenv::class, 'bootEnv') === false) {
 // checking if environment is other, then production
 // It is not recommended execute PHPUnit tests on production environment
 if (\App\Library\Utilities::env('APP_ENV') == \App\Library\Type\Env::PRODUCTION->value) {
-    echo "You are running PhpUnit tests on production environment. Are you sure you want to do this?  Type 'yes' to continue: ";
+    echo 'You are running PhpUnit tests on production environment. Are you sure you want to do this?  Type \'yes\' to continue: ';
 
-    $handle = \fopen("php://stdin", "r");
+    $handle = \fopen('php://stdin', 'r');
     $line = \fgets($handle);
 
     if (\strtolower(\trim($line)) != 'yes') {
-        echo "Aborting tests!\n";
+        echo 'Aborting tests!' . PHP_EOL;
         exit;
     }
 
     \fclose($handle);
 }
-

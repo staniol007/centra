@@ -5,9 +5,9 @@ namespace App\Library\Utilities;
 /**
  * @autor Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.0
+ * @version 1.0.1
  */
-trait Array_
+trait ArrayTrait
 {
 
     /**

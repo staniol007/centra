@@ -5,7 +5,7 @@ namespace App\Service\KanbanBoard\Repository;
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.2
+ * @version 1.0.3
  */
 class Github implements RepositoryInterface
 {
@@ -33,7 +33,7 @@ class Github implements RepositoryInterface
 
     /**
      * @param string $repositoryName
-     * @return \App\Service\KanbanBoard\Schema\Github\Milestone[]
+     * @return \App\Service\KanbanBoard\Schema\GitHub\Milestone[]
      */
     public function getMilestones(string $repositoryName): array
     {
@@ -44,7 +44,7 @@ class Github implements RepositoryInterface
         }
 
         return \array_map(
-            fn(array $milestone): \App\Service\KanbanBoard\Schema\Github\Milestone => \App\Service\KanbanBoard\Schema\Github\Milestone::factory($milestone),
+            fn(array $milestone): \App\Service\KanbanBoard\Schema\GitHub\Milestone => \App\Service\KanbanBoard\Schema\GitHub\Milestone::factory($milestone),
             $this->Milestones->all($this->account, $repositoryName)
         );
     }
@@ -62,7 +62,7 @@ class Github implements RepositoryInterface
         ];
 
         return \array_map(
-            fn(array $milestone): \App\Service\KanbanBoard\Schema\Github\Issue => \App\Service\KanbanBoard\Schema\Github\Issue::factory($milestone),
+            fn(array $milestone): \App\Service\KanbanBoard\Schema\GitHub\Issue => \App\Service\KanbanBoard\Schema\GitHub\Issue::factory($milestone),
             $this->GithubClient->api('issue')->all($this->account, $repositoryName, $issueParameters)
         );
     }

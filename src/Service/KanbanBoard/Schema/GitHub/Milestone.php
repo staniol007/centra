@@ -5,7 +5,7 @@ namespace App\Service\KanbanBoard\Schema\GitHub;
 /**
  * @author Marcin Stanik <marcin.stanik@gmial.com>
  * @since 06.2022
- * @version 1.0.0
+ * @version 1.0.1
  */
 final class Milestone extends \App\Service\KanbanBoard\Schema\Milestone
 {
@@ -147,7 +147,7 @@ final class Milestone extends \App\Service\KanbanBoard\Schema\Milestone
     public function setCreator(User|array $Creator): Milestone
     {
         $this->Creator = \is_array($Creator)
-            ? \App\Service\KanbanBoard\Schema\Github\User::factory($Creator)
+            ? \App\Service\KanbanBoard\Schema\GitHub\User::factory($Creator)
             : $Creator;
 
         return $this;

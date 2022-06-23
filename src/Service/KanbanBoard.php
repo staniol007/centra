@@ -4,22 +4,20 @@ namespace App\Service;
 
 use App\Library\Utilities;
 use Michelf\Markdown;
+use App\Service\KanbanBoard\Type\IssueState;
 
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
  * @since 06.2022
- * @version 1.0.2
+ * @version 1.0.3
  */
 class KanbanBoard
 {
 
-    /** @var string */
-    const ISSUE_LABEL_WAITING_FOR_FEEDBACK = 'waiting-for-feedback';
-
     /**
-     * @var array|null
+     * @var KanbanBoard\Percent[]|null
      */
-    private ?array $milestones = null;
+    private ?array $Milestones = null;
 
     /**
      * @param \App\Service\KanbanBoard\Repository\RepositoryInterface $Repository
@@ -35,41 +33,45 @@ class KanbanBoard
     }
 
     /**
-     * @return array
+     * @return KanbanBoard\Milestone[]
      */
     public function getMilestones(): array
     {
-        if ($this->milestones === null) {
-            $this->milestones = [];
+        if ($this->Milestones === null) {
+            $this->Milestones = [];
 
             /** @var string $repositoryName */
             foreach ($this->repositoryNames as $repositoryName) {
                 /** @var \App\Service\KanbanBoard\Schema\MilestoneInterface $Milestone */
                 foreach ($this->Repository->getMilestones($repositoryName) as $Milestone) {
 
-                    $percent = $this->_percent($Milestone->getClosedIssues(), $Milestone->getOpenIssues());
-                    if ($percent['total'] == 0) {
+                    $Percent = new KanbanBoard\Percent(
+                        $Milestone->getClosedIssues(),
+                        $Milestone->getOpenIssues()
+                    );
+
+                    if ($Percent->getTotal() == 0) {
                         continue;
                     }
 
-                    $issues = $this->issues($repositoryName, $Milestone->getNumber());
+                    $issues = $this->getIssues($repositoryName, $Milestone->getNumber());
 
-                    $this->milestones[$Milestone->getTitle()] = [
-                        'milestone' => $Milestone->getTitle(),
-                        'url' => $Milestone->getHtmlUrl(),
-                        'progress' => $percent,
-                        \App\Service\KanbanBoard\Type\IssueState::QUEUED->value => $issues[\App\Service\KanbanBoard\Type\IssueState::QUEUED->value] ?? [],
-                        \App\Service\KanbanBoard\Type\IssueState::ACTIVE->value => $issues[\App\Service\KanbanBoard\Type\IssueState::ACTIVE->value] ?? [],
-                        \App\Service\KanbanBoard\Type\IssueState::COMPLETED->value => $issues[\App\Service\KanbanBoard\Type\IssueState::COMPLETED->value] ?? [],
-                    ];
+                    $this->Milestones[$Milestone->getTitle()] = new KanbanBoard\Milestone(
+                        $Milestone->getTitle(),
+                        $Milestone->getHtmlUrl(),
+                        $Percent,
+                        $issues[IssueState::QUEUED->value] ?? [],
+                        $issues[IssueState::ACTIVE->value] ?? [],
+                        $issues[IssueState::COMPLETED->value] ?? []
+                    );
                 }
             }
 
-            \ksort($this->milestones);
-            $this->milestones = \array_values($this->milestones);
+            \ksort($this->Milestones);
+            $this->Milestones = \array_values($this->Milestones);
         }
 
-        return $this->milestones;
+        return $this->Milestones;
     }
 
     /**
@@ -77,7 +79,7 @@ class KanbanBoard
      * @param int $milestoneNumber
      * @return array
      */
-    private function issues(string $repository, int $milestoneNumber): array
+    private function getIssues(string $repository, int $milestoneNumber): array
     {
         $issues = [];
 
@@ -89,55 +91,36 @@ class KanbanBoard
 
             $state = $Issue->getKanbanBoardIssueState()->value;
 
-            $issues[$state][] = [
-                'id' => $Issue->getId(),
-                'number' => $Issue->getNumber(),
-                'title' => $Issue->getTitle(),
-                'body' => Markdown::defaultTransform((string)$Issue->getBody()),
-                'url' => (string)$Issue->getHtmlUrl(),
-                'assignee' => $Issue->getAssigneeAvatarUrl() !== null
+            $issues[$state][] = new KanbanBoard\Issue(
+                id: $Issue->getId(),
+                number: $Issue->getNumber(),
+                title: $Issue->getTitle(),
+                body: Markdown::defaultTransform((string)$Issue->getBody()),
+                url: (string)$Issue->getHtmlUrl(),
+                assignee: $Issue->getAssigneeAvatarUrl() !== null
                     ? $Issue->getAssigneeAvatarUrl() . '?s=16'
                     : null,
-                'paused' => $Issue->getForceOfPaused($this->pausedLabels),
-                'progress' => $this->_percent(
+                paused: $Issue->getForceOfPaused($this->pausedLabels),
+                progress: new KanbanBoard\Percent(
                     \substr_count(\strtolower((string)$Issue->getBody()), '[x]'),
-                    \substr_count(\strtolower((string)$Issue->getBody()), '[ ]')),
-                'closed' => $Issue->getClosedAt()?->format('Y-m-d H:i:s'),
-            ];
+                    \substr_count(\strtolower((string)$Issue->getBody()), '[ ]')
+                ),
+                closed: $Issue->getClosedAt()?->format('Y-m-d H:i:s')
+            );
         }
 
-        if (Utilities::hasValue($issues, \App\Service\KanbanBoard\Type\IssueState::ACTIVE->value) === true
-            && \count($issues[\App\Service\KanbanBoard\Type\IssueState::ACTIVE->value]) > 1
-        ) {
-            \usort($issues[\App\Service\KanbanBoard\Type\IssueState::ACTIVE->value], function (array $a, array $b): int {
-                return $a['paused'] == $b['paused']
-                    ? \strcmp($a['title'], $b['title'])
-                    : $a['paused'] - $b['paused'];
-            });
+        if (Utilities::hasValue($issues, IssueState::ACTIVE->value) === true) {
+            \usort(
+                $issues[IssueState::ACTIVE->value],
+                function (KanbanBoard\Issue $a, KanbanBoard\Issue $b): int {
+                    return $a->getPaused() == $b->getPaused()
+                        ? \strcmp($a->getTitle(), $b->getTitle())
+                        : $a->getPaused() - $b->getPaused();
+                }
+            );
         }
 
         return $issues;
-    }
-
-    /**
-     * @param int $complete
-     * @param int $remaining
-     * @return array
-     */
-    private function _percent(int $complete, int $remaining): array
-    {
-        $total = $complete + $remaining;
-
-        $percent = $total > 0 && $complete > 0
-            ? \round($complete / $total * 100)
-            : 0.0;
-
-        return [
-            'total' => $total,
-            'complete' => $complete,
-            'remaining' => $remaining,
-            'percent' => $percent
-        ];
     }
 
 }

@@ -7,13 +7,9 @@ namespace App\Service\KanbanBoard\Type;
  * @since 06.2022
  * @version 1.0.0
  */
-enum IssueState: string
+enum IssueLabel: string
 {
 
-    case COMPLETED = 'completed';
-
-    case ACTIVE = 'active';
-
-    case QUEUED = 'queued';
+    case WAITING_FOR_FEEDBACK = 'waiting-for-feedback';
 
 }

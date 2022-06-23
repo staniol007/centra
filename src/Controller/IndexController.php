@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Library\Utilities;
 use App\Service\KanbanBoard;
+use App\Service\KanbanBoard\Type\IssueLabel;
 
 /**
  * @author Marcin Stanik <marcin.stanik@gmail.com>
@@ -40,7 +41,7 @@ final class IndexController extends AbstractController
         $KanbanBoard = new KanbanBoard(
             new \App\Service\KanbanBoard\Repository\GitHub($token, $account),
             $repositoryNames,
-            [KanbanBoard::ISSUE_LABEL_WAITING_FOR_FEEDBACK]
+            [IssueLabel::WAITING_FOR_FEEDBACK->value]
         );
 
         echo $this->render('index/index', [
